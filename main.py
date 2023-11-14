@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.markdown("""
+st.write("""
 # Wave Interference Simulator
 """)
 
@@ -13,7 +13,7 @@ def update_f_s():
     st.session_state.f = st.session_state.f_s
 
 with st.sidebar:
-    st.markdown("## Variables")
+    st.write("## Variables")
 
     with st.container():
         st.write("### Frequency")
@@ -30,17 +30,20 @@ with st.sidebar:
 
     x_positions = {}
     y_positions = {}
+    delays = {}
     for i in range(drivers_count):
         st.markdown(f"#### driver {i+1}")
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
-            x_positions[i] = st.number_input(label=f'x offset of driver {i+1}', value=0, key=f'x{i}')
+            x_positions[i] = st.number_input(label=f'x offset (cm)', value=0.0, key=f'x{i}',)
         with col2:
-            y_positions[i] = st.number_input(label=f'y offset of driver {i+1}', value=0, key=f'y{i}')
+            y_positions[i] = st.number_input(label=f'y offset (cm)', value=0.0, key=f'y{i}')
+        with col3:
+            delays[i] = st.number_input(label='delay (us)', value=0.0, key=f'd{i}')
 
     drivers = []
     for i in range(drivers_count):
-        drivers.append((y_positions[i], x_positions[i]))
+        drivers.append((y_positions[i], x_positions[i], delays[i]))
 
 # drivers = [
 #     # left-right offset (cm), baffle offset (cm)
@@ -49,11 +52,11 @@ with st.sidebar:
 # ]
 drivers = np.array(drivers)
 
-def func(a,b,px,py):
-    return np.sin(2*np.pi*np.sqrt((a-px)**2+(b-py)**2)*f/34300)  # cm
+def func(a,b,px,py,delay):
+    return np.sin(2*np.pi*(np.sqrt((a-px)**2+(b-py)**2) + 0.0343*delay)*f/34300)  # cm
 
 for driver in drivers:
-    ampl += np.array([[func(i,j, driver[0], driver[1]) for j in np.arange(0,dist)] for i in np.arange(dist_l,dist_r)])
+    ampl += np.array([[func(i,j, driver[0], driver[1], driver[2]) for j in np.arange(0,dist)] for i in np.arange(dist_l,dist_r)])
 
 fig, ax = plt.subplots()
 im = ax.imshow(ampl)
